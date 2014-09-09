@@ -17,7 +17,7 @@ function createAggregator(listService, sectionService, articleService, options) 
       options.logger.warn('Section has not be passed as an argument, ' +
         '{CURRENT} and {CURRENTANDCHILD} in lists will NOT work')
       cb = section
-      section = undefined
+      section = {}
     }
 
     listAggregator(lists, dedupe, null, section, function (error, articles) {

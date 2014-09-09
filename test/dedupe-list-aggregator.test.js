@@ -1,4 +1,4 @@
-var serviceLocator = require('service-locator').createServiceLocator()
+var serviceLocator = require('service-locator')()
   , createAggregator = require('..')
   , articleFixtures = require('./article-fixtures')
   , dbConnect = require('./lib/db-connection')
@@ -35,6 +35,12 @@ before(function (done) {
           var _id = '_' + id++
           lists[_id] = list
           cb(null, _.extend({ _id: _id }, list))
+        }
+      })
+
+    serviceLocator.register('sectionService',
+      { findPublic: function (q, options, cb) {
+          cb(null, [])
         }
       })
 
