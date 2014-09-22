@@ -22,9 +22,7 @@ function createAggregator(listService, sectionService, articleService, options) 
 
     listAggregator(lists, dedupe, null, section, function (error, articles) {
 
-      if (error) {
-        return cb(error)
-      }
+      if (error) return cb(error)
 
       var returnArticles = []
 
@@ -43,7 +41,7 @@ function createAggregator(listService, sectionService, articleService, options) 
           }
         })
       } else {
-        returnArticles = articles
+        returnArticles = Number.isFinite(limit) ? articles.slice(0, limit) : articles
       }
 
       cb(null, returnArticles)
