@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "lodash": "~2.2.1",
-    "cf-list-aggregator": "1.0.0"
+    "cf-list-aggregator": "1.1.0"
   },
   "devDependencies": {
     "mocha": "~1",
