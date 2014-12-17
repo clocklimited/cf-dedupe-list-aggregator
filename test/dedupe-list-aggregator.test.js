@@ -9,6 +9,7 @@ var serviceLocator = require('service-locator')()
   , doorman = require('doorman')
   , uberCache = require('uber-cache')
   , slugUniquer = 1
+  , listFixtures = require('./list-fixtures')
 
 // Initialize the mongo database
 before(function (done) {
@@ -263,7 +264,7 @@ describe('Dedupe List Aggregator', function () {
         })
     })
 
-    it('should never return more articles than specified in the limit argument', function (done) {
+    it('should limit results for auto lists without dedupe', function (done) {
 
       var articles = []
         , listId
@@ -301,6 +302,164 @@ describe('Dedupe List Aggregator', function () {
             done()
           })
         })
+    })
+
+    it('should limit results for auto lists with dedupe', function (done) {
+
+      var articles = []
+        , listId
+        , dedupe = doorman()
+
+      async.series(
+        [ publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , draftArticleMaker([])
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , function (cb) {
+            serviceLocator.listService.create(
+              { type: 'auto'
+              , name: 'test list'
+              , order: 'recent'
+              , limit: 100
+              }
+              , function (err, res) {
+                  listId = res._id
+                  cb(null)
+                })
+          }
+        ], function (err) {
+          if (err) throw err
+
+          dedupe(articles[1].articleId)
+
+          var aggregate = createAggregator(serviceLocator.listService
+            , serviceLocator.sectionService
+            , serviceLocator.articleService
+            , serviceLocator)
+
+          aggregate(listId, dedupe, 3, function (err, results) {
+            should.not.exist(err)
+            results.should.have.length(3)
+            done()
+          })
+        })
+    })
+
+    it('should limit results for manual lists', function (done) {
+
+      var articles = []
+        , listId
+
+      async.series(
+        [ publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , function (cb) {
+            serviceLocator.listService.create(
+              { type: 'manual'
+              , name: 'manual test list'
+              , limit: 100
+              , articles: articles
+              }
+              , function (err, res) {
+                  listId = res._id
+                  cb(null)
+                })
+          }
+        ], function (err) {
+          if (err) throw err
+
+          var aggregate = createAggregator(serviceLocator.listService
+            , serviceLocator.sectionService
+            , serviceLocator.articleService
+            , serviceLocator)
+
+          aggregate(listId, null, 3, function (err, results) {
+            should.not.exist(err)
+            results.should.have.length(3)
+            done()
+          })
+        })
+    })
+
+    it('should limit results for manual lists with dedupe', function (done) {
+
+      var articles = []
+        , listId
+        , dedupe = doorman()
+
+      async.series(
+        [ publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , draftArticleMaker([])
+        , publishedArticleMaker(articles)
+        , publishedArticleMaker(articles)
+        , function (cb) {
+            serviceLocator.listService.create(
+              { type: 'manual'
+              , name: 'manual test list'
+              , limit: 100
+              , articles: articles
+              }
+              , function (err, res) {
+                  listId = res._id
+                  cb(null)
+                })
+          }
+        ], function (err) {
+          if (err) throw err
+
+          dedupe(articles[1].articleId)
+
+          var aggregate = createAggregator(serviceLocator.listService
+            , serviceLocator.sectionService
+            , serviceLocator.articleService
+            , serviceLocator)
+
+          aggregate(listId, dedupe, 2, function (err, results) {
+            should.not.exist(err)
+            results.should.have.length(2)
+            done()
+          })
+        })
+    })
+
+    it('should limit results for deduped manual lists containing custom items', function (done) {
+
+      var articles =
+          [ listFixtures.validCustomItem
+          , _.extend({}, listFixtures.validCustomItem, { customId: 1 })
+          , _.extend({}, listFixtures.validCustomItem, { customId: 2 })
+          , _.extend({}, listFixtures.validCustomItem, { customId: 3 })
+          ]
+        , listId
+        , dedupe = doorman()
+
+      serviceLocator.listService.create(
+        { type: 'manual'
+        , name: 'manual test list'
+        , limit: 100
+        , articles: articles
+        }
+        , function (err, res) {
+            listId = res._id
+
+            var aggregate = createAggregator(serviceLocator.listService
+              , serviceLocator.sectionService
+              , serviceLocator.articleService
+              , serviceLocator)
+
+            aggregate(listId, dedupe, 3, function (err, results) {
+              should.not.exist(err)
+              results.should.have.length(3)
+              done()
+            })
+          })
     })
   })
 

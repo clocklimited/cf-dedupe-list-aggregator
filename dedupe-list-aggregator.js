@@ -27,16 +27,16 @@ function createAggregator(listService, sectionService, articleService, options) 
       var returnArticles = []
 
       if (dedupe) {
+
         // Handle the dedupe consumption
-        articles.forEach(function (article) {
-          // If they have added a custom list item, don't dedupe it.
-          if (article.type !== 'custom') {
-            var isDuplicate = dedupe.has(article._id)
-            if (!isDuplicate && returnArticles.length < limit) {
-              dedupe(article._id)
-              returnArticles.push(article)
-            }
-          } else {
+        articles.some(function (article) {
+          if (returnArticles.length >= limit) return false
+
+          if (article.type === 'custom') {
+            returnArticles.push(article)
+          } else if (!dedupe.has(article._id)) {
+            // Only add non-custom to deduper
+            dedupe(article._id)
             returnArticles.push(article)
           }
         })
