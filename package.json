@@ -23,8 +23,8 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "lodash": "~2.2.1",
-    "cf-list-aggregator": "1.1.0"
+    "cf-list-aggregator": "^1.2.1",
+    "lodash": "~2.2.1"
   },
   "devDependencies": {
     "mocha": "~1",
