@@ -24,7 +24,7 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "cf-list-aggregator": "^2.0.0",
+    "cf-list-aggregator": "^2.0.0-0",
     "lodash": "~2.2.1"
   },
   "devDependencies": {
