@@ -14,6 +14,7 @@ var serviceLocator = require('service-locator')()
 // Initialize the mongo database
 before(function (done) {
   dbConnect.connect(function (err, db) {
+    if (err) return done(err)
 
     serviceLocator.register('persistence', function (name) {
       return saveMongodb(db.collection(name + Date.now()))
@@ -27,7 +28,7 @@ before(function (done) {
       .register('cache', uberCache())
 
     var lists = {}
-      ,  id = 0
+      , id = 0
     serviceLocator.register('listService',
       { read: function (id, cb) {
           cb(null, lists[id])
@@ -52,7 +53,7 @@ before(function (done) {
 
 after(dbConnect.disconnect)
 
-function publishedArticleMaker(articles, custom) {
+function publishedArticleMaker (articles, custom) {
   return function (cb) {
     var model = _.extend({}, articleFixtures.validNewPublishedModel, custom)
 
@@ -62,13 +63,13 @@ function publishedArticleMaker(articles, custom) {
 
     serviceLocator.articleService.create(model, function (err, result) {
       if (err) return cb(err)
-      articles.push(_.extend({}, { articleId: result._id }, custom))
+      articles.push(_.extend({}, { itemId: result._id, overrides: custom }))
       cb(null)
     })
   }
 }
 
-function draftArticleMaker() {
+function draftArticleMaker () {
   return function (cb) {
     serviceLocator.articleService.create(articleFixtures.validNewModel, function (err) {
       if (err) return cb(err)
@@ -106,6 +107,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -147,6 +149,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -157,13 +160,13 @@ describe('Dedupe List Aggregator', function () {
           var aggregate = createAggregator(serviceLocator.listService, serviceLocator.sectionService,
             serviceLocator.articleService, serviceLocator)
 
-          dedupe(articles[1].articleId)
+          dedupe(articles[1].itemId)
 
           aggregate(listId, dedupe, null, function (err, results) {
             should.not.exist(err)
             results.should.have.length(4)
             Object.keys(dedupe.list()).should.have.length(5)
-            dedupe(articles[1].articleId).should.equal(false)
+            dedupe(articles[1].itemId).should.equal(false)
             done()
           })
 
@@ -190,6 +193,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listIds.push(res._id)
                   cb(null)
                 })
@@ -202,6 +206,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listIds.push(res._id)
                   cb(null)
                 })
@@ -242,6 +247,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -284,6 +290,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -325,6 +332,7 @@ describe('Dedupe List Aggregator', function () {
               , limit: 100
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -332,7 +340,7 @@ describe('Dedupe List Aggregator', function () {
         ], function (err) {
           if (err) throw err
 
-          dedupe(articles[1].articleId)
+          dedupe(articles[1].itemId)
 
           var aggregate = createAggregator(serviceLocator.listService
             , serviceLocator.sectionService
@@ -363,9 +371,10 @@ describe('Dedupe List Aggregator', function () {
               { type: 'manual'
               , name: 'manual test list'
               , limit: 100
-              , articles: articles
+              , items: articles
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -404,9 +413,10 @@ describe('Dedupe List Aggregator', function () {
               { type: 'manual'
               , name: 'manual test list'
               , limit: 100
-              , articles: articles
+              , items: articles
               }
               , function (err, res) {
+                  if (err) return cb(err)
                   listId = res._id
                   cb(null)
                 })
@@ -414,7 +424,7 @@ describe('Dedupe List Aggregator', function () {
         ], function (err) {
           if (err) throw err
 
-          dedupe(articles[1].articleId)
+          dedupe(articles[1].itemId)
 
           var aggregate = createAggregator(serviceLocator.listService
             , serviceLocator.sectionService
@@ -433,9 +443,9 @@ describe('Dedupe List Aggregator', function () {
 
       var articles =
           [ listFixtures.validCustomItem
-          , _.extend({}, listFixtures.validCustomItem, { customId: 1 })
-          , _.extend({}, listFixtures.validCustomItem, { customId: 2 })
-          , _.extend({}, listFixtures.validCustomItem, { customId: 3 })
+          , _.extend({}, listFixtures.validCustomItem)
+          , _.extend({}, listFixtures.validCustomItem)
+          , _.extend({}, listFixtures.validCustomItem)
           ]
         , listId
         , dedupe = doorman()
@@ -444,9 +454,10 @@ describe('Dedupe List Aggregator', function () {
         { type: 'manual'
         , name: 'manual test list'
         , limit: 100
-        , articles: articles
+        , items: articles
         }
         , function (err, res) {
+            if (err) return done(err)
             listId = res._id
 
             var aggregate = createAggregator(serviceLocator.listService

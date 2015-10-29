@@ -3,13 +3,13 @@ var _ = require('lodash')
   , crudService = require('crud-service')
   , logger = require('./null-logger')
 
-function createPublicQuery(query, options) {
+function createPublicQuery (query, options) {
   var now = options && options.date ? options.date : new Date()
     , publicQuery = _.extend({}, query,
     { state: 'Published'
     , $and:
-      [ { $or: [{ liveDate: null }, { liveDate: { $lte: now } }] }
-      , { $or: [{ expiryDate: null }, { expiryDate: { $gte: now } } ] }
+      [ { $or: [ { liveDate: null }, { liveDate: { $lte: now } } ] }
+      , { $or: [ { expiryDate: null }, { expiryDate: { $gte: now } } ] }
       ]
     })
 
@@ -20,7 +20,7 @@ function createPublicQuery(query, options) {
   return publicQuery
 }
 
-module.exports = function(saveEngine) {
+module.exports = function (saveEngine) {
   var articleSave = save('article',
       // Create a unique name for the memgo engine so it always starts empty.
       { engine: saveEngine, debug: false, logger: logger })

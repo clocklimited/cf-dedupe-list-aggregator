@@ -5,10 +5,10 @@ _.extend(createAggregator, createNoDedupeListAggregator)
 
 module.exports = createAggregator
 
-function createAggregator(listService, sectionService, articleService, options) {
+function createAggregator (listService, sectionService, crudService, options) {
 
-  function aggregate(lists, dedupe, limit, section, cb) {
-    var listAggregator = createNoDedupeListAggregator(listService, sectionService, articleService, options)
+  function aggregate (lists, dedupe, limit, section, cb) {
+    var listAggregator = createNoDedupeListAggregator(listService, sectionService, crudService, options)
 
     if (typeof limit !== 'number') limit = Infinity
 
@@ -20,31 +20,39 @@ function createAggregator(listService, sectionService, articleService, options) 
       section = {}
     }
 
-    listAggregator(lists, dedupe, null, section, function (error, articles) {
+    listAggregator(lists, dedupe, null, section, function (error, items) {
 
       if (error) return cb(error)
 
-      var returnArticles = []
+      if (!dedupe) return cb(null, Number.isFinite(limit) ? items.slice(0, limit) : items)
 
-      if (dedupe) {
+      var toReturn = []
 
-        // Handle the dedupe consumption
-        articles.some(function (article) {
-          if (returnArticles.length >= limit) return false
+      // Handle the dedupe consumption
+      items.some(function (item) {
 
-          if (article.type === 'custom') {
-            returnArticles.push(article)
-          } else if (!dedupe.has(article._id)) {
-            // Only add non-custom to deduper
-            dedupe(article._id)
-            returnArticles.push(article)
-          }
-        })
-      } else {
-        returnArticles = Number.isFinite(limit) ? articles.slice(0, limit) : articles
-      }
+        // Using `.some`, returning false will stop the
+        // iteration once enough items have been gathered
+        if (toReturn.length >= limit) return true
 
-      cb(null, returnArticles)
+        // Custom items don't have IDs and are never deduped
+        if (!item._id) {
+          toReturn.push(item)
+          return false
+        }
+
+        if (!dedupe.has(item._id)) {
+          dedupe(item._id)
+          toReturn.push(item)
+          return false
+        }
+
+        return false
+
+      })
+
+      cb(null, toReturn)
+
     })
   }
 

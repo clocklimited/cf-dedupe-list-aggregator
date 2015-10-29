@@ -1,4 +1,4 @@
-function noop() {}
+function noop () {}
 
 // A null logger for use in testing.
 module.exports =
