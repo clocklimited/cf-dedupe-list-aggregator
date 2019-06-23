@@ -1,5 +1,7 @@
 # cf-dedupe-list-aggregator
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/clocklimited/cf-dedupe-list-aggregator.svg)](https://greenkeeper.io/)
+
 Dedupe version of cf-dedupe-list-aggregator
 
 ## Installation
