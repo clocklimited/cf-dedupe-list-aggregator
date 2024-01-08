@@ -25,7 +25,8 @@
   },
   "dependencies": {
     "cf-list-aggregator": "^2.1.0",
-    "lodash": "^4.17.12"
+    "lodash": "^4.17.12",
+    "minimist": "0.0.8"
   },
   "devDependencies": {
     "async": "~0.2.9",
