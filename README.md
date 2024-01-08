@@ -4,7 +4,7 @@ Dedupe version of cf-dedupe-list-aggregator
 
 ## Installation
 
-      npm install --save cf-dedupe-list-aggregator
+      npm install --save @clocklimited/cf-dedupe-list-aggregator
 
 ## Usage
 
